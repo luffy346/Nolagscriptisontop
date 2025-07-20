@@ -9,10 +9,13 @@ gui.Name = "PetSpawnerGUI"
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 350, 0, 500)
-frame.Position = UDim2.new(0.5, -175, 0.5, -250)
+frame.Size = UDim2.new(0, 280, 0, 380)
+frame.Position = UDim2.new(0.5, -140, 0.5, -190)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Selectable = true
 
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 40)
@@ -43,7 +46,7 @@ listLayout.Padding = UDim.new(0, 4)
 
 local selectedPet = nil
 
-local weightBox = Instance.new("TextBox", frame)
+local weightBox = Instance.new("Weight", frame)
 weightBox.Size = UDim2.new(1, -20, 0, 30)
 weightBox.Position = UDim2.new(0, 10, 0, 290)
 weightBox.PlaceholderText = "Enter pet weight"
@@ -52,7 +55,7 @@ weightBox.TextSize = 18
 weightBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 weightBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-local ageBox = Instance.new("TextBox", frame)
+local ageBox = Instance.new("Age", frame)
 ageBox.Size = UDim2.new(1, -20, 0, 30)
 ageBox.Position = UDim2.new(0, 10, 0, 330)
 ageBox.PlaceholderText = "Enter pet age"
