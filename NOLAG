@@ -1,1 +1,123 @@
-loadstring(game:HttpGet("https://pastefy.app/kCMbBogr/raw"))()
+-- Fake GUI: Fully functional Pet Spawner + ESP Egg for Grow A Garden
+-- Cloned to GitHub as raw URL
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "GrowAGardenFake"
+
+-- Main Frame
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0.3,0,0.4,0)
+frame.Position = UDim2.new(0.35,0,0.3,0)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.BorderSizePixel = 0
+
+-- Title
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,30)
+title.Position = UDim2.new(0,0,0,0)
+title.BackgroundTransparency = 1
+title.Text = "🐾 Pet Spawner"
+title.TextColor3 = Color3.new(0,1,0.5)
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+
+-- Dropdown
+local pets = {
+  "Starfish","Crab","Seagull","Bunny","Dog","Golden Lab",
+  "Black Bunny","Cat","Bee","Chicken","Deer",
+  "Hedgehog","Turtle","Fox","Rooster","Spotted Deer",
+  "Dragonfly","Giant Ant","Moon Cat","Polar Bear","Silver Monkey",
+  "Praying Mantis","Raccoon","Caterpillar","Owl","Blood Owl","Echo Frog",
+  "Red Fox","Night Owl","Flamingo","Toucan","Orangutan","Sea Turtle","Seal",
+  "T-Rex","Brontosaurus","Triceratops","Pterodactyl","Raptor","Stegosaurus"
+}
+
+local dropdownFrame = Instance.new("ScrollingFrame", frame)
+dropdownFrame.Size = UDim2.new(1,-20,0.6,0)
+dropdownFrame.Position = UDim2.new(0,10,0,35)
+dropdownFrame.BackgroundTransparency = 1
+dropdownFrame.CanvasSize = UDim2.new(0,0,0,#pets*30)
+
+local selectedPet = pets[1]
+local petButtons = {}
+for i,pet in ipairs(pets) do
+    local btn = Instance.new("TextButton", dropdownFrame)
+    btn.Size = UDim2.new(1,0,0,30)
+    btn.Position = UDim2.new(0,0,0,(i-1)*30)
+    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.Gotham
+    btn.TextScaled = true
+    btn.Text = pet
+    btn.MouseButton1Click:Connect(function()
+        for _,b in ipairs(petButtons) do b.TextColor3 = Color3.new(1,1,1) end
+        btn.TextColor3 = Color3.new(0,1,0)
+        selectedPet = pet
+    end)
+    table.insert(petButtons, btn)
+end
+petButtons[1].TextColor3 = Color3.new(0,1,0)
+
+-- Toggles
+local function makeToggle(name, posY, callback)
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0.6,0,0,30)
+    btn.Position = UDim2.new(0.2,0,posY,0)
+    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    btn.TextScaled = true
+    local on = false
+    btn.Text = name.. " [OFF]"
+    btn.MouseButton1Click:Connect(function()
+        on = not on
+        btn.Text = name.. (on and " [ON]" or " [OFF]")
+        btn.BackgroundColor3 = on and Color3.fromRGB(0,128,0) or Color3.fromRGB(50,50,50)
+        callback(on)
+    end)
+end
+
+-- Pet spawn handling
+local currentPetPart
+makeToggle("Pet Spawner", 0.65, function(on)
+    if on then
+        if currentPetPart then currentPetPart:Destroy() end
+        currentPetPart = Instance.new("Part", Workspace)
+        currentPetPart.Name = selectedPet.."Clone"
+        currentPetPart.Shape = Enum.PartType.Ball
+        currentPetPart.Size = Vector3.new(2,2,2)
+        currentPetPart.Color = Color3.fromHSV(math.random(),1,1)
+        currentPetPart.CanCollide = false
+        RunService:BindToRenderStep("PetFollow", 1, function()
+            if currentPetPart and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character.HumanoidRootPart
+                local target = hrp.Position + hrp.CFrame.LookVector * 2 + Vector3.new(0,3,0)
+                currentPetPart.Position = currentPetPart.Position:Lerp(target,0.15)
+            end
+        end)
+    else
+        if currentPetPart then currentPetPart:Destroy() end
+        RunService:UnbindFromRenderStep("PetFollow")
+    end
+end)
+
+-- Egg ESP
+local highlights = {}
+makeToggle("ESP Egg", 0.75, function(on)
+    if on then
+        for _,egg in ipairs(Workspace:GetDescendants()) do
+            if egg.Name:lower():find("egg") and egg:IsA("BasePart") then
+                local h = Instance.new("Highlight", egg)
+                h.FillTransparency = 0.5
+                h.OutlineColor = Color3.new(1,0.5,0)
+                table.insert(highlights, h)
+            end
+        end
+    else
+        for _,h in ipairs(highlights) do h:Destroy() end
+        highlights = {}
+    end
+end)
