@@ -1,123 +1,154 @@
--- Fake GUI: Fully functional Pet Spawner + ESP Egg for Grow A Garden
--- Cloned to GitHub as raw URL
-
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-
 local player = Players.LocalPlayer
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "GrowAGardenFake"
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
--- Main Frame
+-- Setup GUI
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "PetSpawnerGUI"
+gui.ResetOnSpawn = false
+
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0.3,0,0.4,0)
-frame.Position = UDim2.new(0.35,0,0.3,0)
-frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Size = UDim2.new(0, 350, 0, 500)
+frame.Position = UDim2.new(0.5, -175, 0.5, -250)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BorderSizePixel = 0
 
--- Title
 local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,30)
-title.Position = UDim2.new(0,0,0,0)
-title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, 0, 0, 40)
 title.Text = "🐾 Pet Spawner"
-title.TextColor3 = Color3.new(0,1,0.5)
-title.Font = Enum.Font.GothamBold
-title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 24
+title.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- Dropdown
-local pets = {
-  "Starfish","Crab","Seagull","Bunny","Dog","Golden Lab",
-  "Black Bunny","Cat","Bee","Chicken","Deer",
-  "Hedgehog","Turtle","Fox","Rooster","Spotted Deer",
-  "Dragonfly","Giant Ant","Moon Cat","Polar Bear","Silver Monkey",
-  "Praying Mantis","Raccoon","Caterpillar","Owl","Blood Owl","Echo Frog",
-  "Red Fox","Night Owl","Flamingo","Toucan","Orangutan","Sea Turtle","Seal",
-  "T-Rex","Brontosaurus","Triceratops","Pterodactyl","Raptor","Stegosaurus"
+local toggle = Instance.new("TextButton", frame)
+toggle.Size = UDim2.new(0.5, -10, 0, 30)
+toggle.Position = UDim2.new(0.5, -10, 0, 50)
+toggle.Text = "Pets"
+toggle.Font = Enum.Font.SourceSans
+toggle.TextSize = 20
+toggle.BackgroundColor3 = Color3.fromRGB(90, 160, 200)
+toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Size = UDim2.new(1, -20, 0, 180)
+scroll.Position = UDim2.new(0, 10, 0, 90)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 6
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local listLayout = Instance.new("UIListLayout", scroll)
+listLayout.Padding = UDim.new(0, 4)
+
+local selectedPet = nil
+
+local weightBox = Instance.new("TextBox", frame)
+weightBox.Size = UDim2.new(1, -20, 0, 30)
+weightBox.Position = UDim2.new(0, 10, 0, 290)
+weightBox.PlaceholderText = "Enter pet weight"
+weightBox.Font = Enum.Font.SourceSans
+weightBox.TextSize = 18
+weightBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+weightBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local ageBox = Instance.new("TextBox", frame)
+ageBox.Size = UDim2.new(1, -20, 0, 30)
+ageBox.Position = UDim2.new(0, 10, 0, 330)
+ageBox.PlaceholderText = "Enter pet age"
+ageBox.Font = Enum.Font.SourceSans
+ageBox.TextSize = 18
+ageBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ageBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local spawnBtn = Instance.new("TextButton", frame)
+spawnBtn.Size = UDim2.new(1, -20, 0, 40)
+spawnBtn.Position = UDim2.new(0, 10, 0, 400)
+spawnBtn.Text = "Spawn (Hold in Hands)"
+spawnBtn.Font = Enum.Font.SourceSansBold
+spawnBtn.TextSize = 20
+spawnBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 120)
+spawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- All Grow A Garden Pets
+local petNames = {
+    "Bunny","Dog","Golden Lab","Black Bunny","Cat","Chicken","Deer",
+    "Monkey","Orange Tabby","Pig","Rooster","Spotted Deer",
+    "Cow","Polar Bear","Sea Otter","Silver Monkey","Turtle",
+    "Brown Mouse","Caterpillar","Giant Ant","Grey Mouse","Praying Mantis","Red Fox","Red Giant Ant","Snail","Squirrel",
+    "Dragonfly","Disco Bee","Butterfly","Moth","Tarantula Hawk","Wasp",
+    "T-Rex","Triceratops","Pterodactyl","Brontosaurus","Dilophosaurus","Ankylosaurus","Pachycephalosaurus","Stegosaurus",
+    "Iguanodon","Parasaurolophus","Raptor","Flamingo","Toucan","Orangutan",
+    "Seal","Sea Turtle","Peacock","Ostrich","Capybara","Scarlet Macaw","Mini Octopus",
+    "Shiba Inu","Nihonzaru","Tanuki","Tanchozuru","Kappa","Kitsune"
 }
 
-local dropdownFrame = Instance.new("ScrollingFrame", frame)
-dropdownFrame.Size = UDim2.new(1,-20,0.6,0)
-dropdownFrame.Position = UDim2.new(0,10,0,35)
-dropdownFrame.BackgroundTransparency = 1
-dropdownFrame.CanvasSize = UDim2.new(0,0,0,#pets*30)
+-- Toggle pet list
+local petsShown = false
+toggle.MouseButton1Click:Connect(function()
+    if petsShown then return end
+    for _, name in ipairs(petNames) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 30)
+        btn.Text = name
+        btn.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 18
+        btn.Parent = scroll
 
-local selectedPet = pets[1]
-local petButtons = {}
-for i,pet in ipairs(pets) do
-    local btn = Instance.new("TextButton", dropdownFrame)
-    btn.Size = UDim2.new(1,0,0,30)
-    btn.Position = UDim2.new(0,0,0,(i-1)*30)
-    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Font = Enum.Font.Gotham
-    btn.TextScaled = true
-    btn.Text = pet
-    btn.MouseButton1Click:Connect(function()
-        for _,b in ipairs(petButtons) do b.TextColor3 = Color3.new(1,1,1) end
-        btn.TextColor3 = Color3.new(0,1,0)
-        selectedPet = pet
-    end)
-    table.insert(petButtons, btn)
-end
-petButtons[1].TextColor3 = Color3.new(0,1,0)
-
--- Toggles
-local function makeToggle(name, posY, callback)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0.6,0,0,30)
-    btn.Position = UDim2.new(0.2,0,posY,0)
-    btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    btn.TextScaled = true
-    local on = false
-    btn.Text = name.. " [OFF]"
-    btn.MouseButton1Click:Connect(function()
-        on = not on
-        btn.Text = name.. (on and " [ON]" or " [OFF]")
-        btn.BackgroundColor3 = on and Color3.fromRGB(0,128,0) or Color3.fromRGB(50,50,50)
-        callback(on)
-    end)
-end
-
--- Pet spawn handling
-local currentPetPart
-makeToggle("Pet Spawner", 0.65, function(on)
-    if on then
-        if currentPetPart then currentPetPart:Destroy() end
-        currentPetPart = Instance.new("Part", Workspace)
-        currentPetPart.Name = selectedPet.."Clone"
-        currentPetPart.Shape = Enum.PartType.Ball
-        currentPetPart.Size = Vector3.new(2,2,2)
-        currentPetPart.Color = Color3.fromHSV(math.random(),1,1)
-        currentPetPart.CanCollide = false
-        RunService:BindToRenderStep("PetFollow", 1, function()
-            if currentPetPart and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = player.Character.HumanoidRootPart
-                local target = hrp.Position + hrp.CFrame.LookVector * 2 + Vector3.new(0,3,0)
-                currentPetPart.Position = currentPetPart.Position:Lerp(target,0.15)
-            end
+        btn.MouseButton1Click:Connect(function()
+            selectedPet = name
+            title.Text = "🐾 Pet Spawner - " .. name
         end)
-    else
-        if currentPetPart then currentPetPart:Destroy() end
-        RunService:UnbindFromRenderStep("PetFollow")
     end
+    scroll.CanvasSize = UDim2.new(0, 0, 0, #petNames * 34)
+    petsShown = true
 end)
 
--- Egg ESP
-local highlights = {}
-makeToggle("ESP Egg", 0.75, function(on)
-    if on then
-        for _,egg in ipairs(Workspace:GetDescendants()) do
-            if egg.Name:lower():find("egg") and egg:IsA("BasePart") then
-                local h = Instance.new("Highlight", egg)
-                h.FillTransparency = 0.5
-                h.OutlineColor = Color3.new(1,0.5,0)
-                table.insert(highlights, h)
-            end
-        end
-    else
-        for _,h in ipairs(highlights) do h:Destroy() end
-        highlights = {}
+-- Create fake pet model and attach to hand
+local function spawnHeldPet(name, weight, age)
+    -- Clean up any existing pet
+    if character:FindFirstChild("FakePet") then
+        character.FakePet:Destroy()
+    end
+
+    local pet = Instance.new("Part")
+    pet.Name = "FakePet"
+    pet.Size = Vector3.new(2, 1.5, 1.5)
+    pet.Color = Color3.fromRGB(255, 200, 0)
+    pet.Anchored = false
+    pet.CanCollide = false
+    pet.Shape = Enum.PartType.Block
+
+    local surfaceGui = Instance.new("SurfaceGui", pet)
+    surfaceGui.Face = Enum.NormalId.Top
+    surfaceGui.AlwaysOnTop = true
+    local label = Instance.new("TextLabel", surfaceGui)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = name .. "\n🪶 " .. weight .. "kg | 🕒 " .. age .. "y"
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.BackgroundTransparency = 1
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+
+    pet.Parent = character
+
+    local hand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
+    if hand then
+        local weld = Instance.new("WeldConstraint")
+        pet.CFrame = hand.CFrame * CFrame.new(0, -1, -1)
+        pet.CFrame = pet.CFrame * CFrame.Angles(math.rad(0), math.rad(0), math.rad(90))
+        pet.Position = hand.Position + Vector3.new(0, -1, -1)
+        weld.Part0 = hand
+        weld.Part1 = pet
+        weld.Parent = pet
+    end
+end
+
+-- Spawn Button Click
+spawnBtn.MouseButton1Click:Connect(function()
+    if selectedPet and weightBox.Text ~= "" and ageBox.Text ~= "" then
+        spawnHeldPet(selectedPet, weightBox.Text, ageBox.Text)
     end
 end)
