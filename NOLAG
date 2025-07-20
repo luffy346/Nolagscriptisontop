@@ -137,6 +137,58 @@ local function spawnHeldPet(name, weight, age)
 
     pet.Parent = character
 
+local function spawnHeldPet(name, weight, age)
+    -- Cleanup existing pet
+    if character:FindFirstChild("FakePet") then
+        character.FakePet:Destroy()
+    end
+
+    -- Find the model
+    local petModelFolder = petStorage:FindFirstChild(name)
+    if not petModelFolder then
+        warn("Pet model not found:", name)
+        return
+    end
+
+    -- Clone model and set it up
+    local petModel = petModelFolder:Clone()
+    petModel.Name = "FakePet"
+    petModel.Parent = character
+
+    -- Position the model at the hand
+    local hand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
+    if not hand then return end
+
+    -- Weld each part to the hand
+    for _, part in ipairs(petModel:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Anchored = false
+            part.CanCollide = false
+            local weld = Instance.new("WeldConstraint")
+            weld.Part0 = hand
+            weld.Part1 = part
+            weld.Parent = part
+            -- Offset the model properly (adjust CFrameOffset to taste)
+            part.CFrame = hand.CFrame * CFrame.new(0, -1, -1)
+        end
+    end
+
+    -- Optionally attach a name & stats label
+    local billboard = Instance.new("BillboardGui", petModel)
+    billboard.Adornee = petModel:GetPrimaryPartCFrame() and petModel.PrimaryPart or petModel:FindFirstChildWhichIsA("BasePart")
+    billboard.StudsOffset = Vector3.new(0, 2, 0)
+    billboard.Size = UDim2.new(0,200,0,60)
+    billboard.AlwaysOnTop = true
+
+    local label = Instance.new("TextLabel", billboard)
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    label.TextColor3 = Color3.new(1,1,1)
+    label.Text = string.format("%s\n%.1f kg | %s y", name, tonumber(weight) or weight, age)
+end
+
     local hand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
     if hand then
         local weld = Instance.new("WeldConstraint")
